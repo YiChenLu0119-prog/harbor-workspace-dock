@@ -4,11 +4,16 @@
     <key>CFBundleExecutable</key><string>Harbor</string>
     <key>CFBundleIdentifier</key><string>local.harbor.WorkspaceDock</string>
     <key>CFBundleName</key><string>Harbor</string>
-    <key>CFBundleDisplayName</key><string>泊岸 Harbor</string>
+    <key>CFBundleDisplayName</key><string>Harbor</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.2.0</string>
-    <key>CFBundleVersion</key><string>2</string>
+    <key>CFBundleShortVersionString</key><string>0.3.0</string>
+    <key>CFBundleVersion</key><string>3</string>
     <key>LSMinimumSystemVersion</key><string>13.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
+    <key>UTExportedTypeDeclarations</key><array><dict>
+        <key>UTTypeIdentifier</key><string>local.harbor.workspace.entry</string>
+        <key>UTTypeDescription</key><string>Harbor internal entry</string>
+        <key>UTTypeConformsTo</key><array><string>public.data</string></array>
+    </dict></array>
 </dict></plist>

@@ -1,21 +1,25 @@
-# 泊岸 Harbor · Workspace Dock
+# Harbor · Workspace Dock
 
-A lightweight native macOS launcher for organizing links to your ChatGPT work. Built with SwiftUI and AppKit. Your conversations stay in the native ChatGPT app.
+English | [简体中文](README.zh-CN.md)
 
-泊岸把分散的工作入口按项目收好。按 **⌃⌥Space**，搜索、选中，再回到原生 ChatGPT 继续工作。
+**A small home for your ChatGPT work on macOS.**
 
-## 功能
+Harbor keeps your conversation shortcuts together by project. Press **⌃⌥Space**, find an entry, and continue working in the native app. Built with SwiftUI and AppKit, with local storage and no third-party dependencies.
 
-- 菜单栏与全局快捷键；项目分组、搜索、收藏、入口编辑。
-- 原生浮动面板，键盘方向键选择、Return 操作、Esc 收起。
-- 本地 JSON 保存，不读取聊天正文、账号或 Cookie。
-- 每个原生入口由使用者确认准确对话后，才记录为已验证。
-- 系统/浅色/深色外观、点缀色、列表密度和默认视图设置。
-- macOS 登录时启动，可在设置中关闭，并显示系统实际状态。
+## Features
 
-## 快速开始
+- **One shortcut away.** A menu-bar app and a global keyboard shortcut open a native floating panel.
+- **Organize your work.** Projects, search, favorites, editable entries, and full-row navigation targets.
+- **Move, sort, and undo.** Delete entries with undo, move them between projects, or drag to reorder within a project.
+- **Make it yours.** English and Simplified Chinese, system/light/dark appearance, accent colors, list density, and a preferred starting view.
+- **Ready at login.** Optional macOS login launch, with the actual system registration status shown in Settings.
+- **Local by design.** Project names, links, and confirmation records live on your Mac. Harbor does not read conversations, cookies, or account credentials.
 
-需要 macOS 13+、完整 Xcode 和 Swift 5.9 或更新版本。没有第三方依赖。
+**Native opening currently supports local Codex thread links only.** Cloud ChatGPT links can be organized and saved, but native opening is not yet supported. See [link support](#link-support) below.
+
+## Get started
+
+Requires **macOS 13+**, full Xcode, and Swift 5.9 or later.
 
 ```sh
 bash scripts/test.sh
@@ -23,32 +27,47 @@ bash scripts/build.sh
 open dist/Harbor.app
 ```
 
-把 `Harbor.app` 安装到 `/Applications` 或 `~/Applications` 后，再启用「登录时启动」。默认数据目录是 `~/Library/Application Support/HarborWorkspaceDock/`。详细构建说明见 [BUILDING.md](BUILDING.md)。当前是本机开发构建，尚未做 Developer ID 签名和 Apple 公证。
+Install `Harbor.app` in `/Applications` or `~/Applications` before enabling **Launch at login**. This is a local development build with an ad-hoc signature; Developer ID signing and Apple notarization are not available yet. See [Build and run](BUILDING.md).
 
-1. 新建项目，添加聊天名称和从原生 App 复制的链接。
-2. 可测试的入口选择「验证入口」，观察是否进入正确对话，再回到泊岸确认。
-3. 日常用 **⌃⌥Space** 呼出；输入关键词，按 **↑/↓** 选择、**Return** 操作。
-4. 用 **⌘N** 添加入口、**⌘F** 回到搜索、**⌘,** 打开设置。
+1. Create a project, then add an entry with a title and the original link copied from the native app.
+2. For supported native links, choose **Verify**, inspect the destination in the native app, and return to Harbor to confirm the exact conversation.
+3. Press **⌃⌥Space**, click Search or press **⌘F**, then type. Select with **↑/↓** and press **Return** to open or verify.
+4. Use **⌘N** to add an entry, **⌘F** to focus search, and **⌘,** to open Settings.
 
-## 链接支持边界
+New installations start in English. Switch anytime in **Settings → Language**. Existing preferences from earlier versions retain Simplified Chinese. Your own project names and entry titles stay as written. Opening the panel or switching projects leaves the search field inactive; click it or press **⌘F** to start typing.
 
-| 链接 | 行为 |
+## What's new in v0.3
+
+| Action | How it works |
 | --- | --- |
-| `codex://threads/<本地线程 UUID>` | 指定原生 App 测试打开；准确目标需逐项人工确认 |
-| `https://chatgpt.com/c/…` 等云端聊天 | 可以保存；当前不执行原生打开 |
-| `chatgpt-conversation://…` 内部引用 | 可以保存；当前不执行原生打开 |
-| 其他地址或带额外参数的非标准原生链接 | 拒绝执行，并显示说明 |
+| Delete and undo | Open an entry's **…** menu and choose **Delete entry**. Use the banner's **Undo** action, the menu-bar command, or **⌘Z** to restore it. This removes only the Harbor bookmark; the original conversation stays in ChatGPT. |
+| Move to a project | Choose **Move to…**, or drag the entry onto a project in the sidebar. Its link, favorite state, and verification record stay intact. |
+| Reorder | Drag above or below another entry in the same project, or choose **Move up / Move down**. Clear search and leave Favorites before reordering. |
+| Larger click targets | Click anywhere in a sidebar row, including its icon, count, and blank space. Click the body of an entry row to select it; its action and menu remain separate. |
+| Change language | Choose **English** or **简体中文** in Settings. The interface changes immediately and remembers your choice. |
 
-[官方深链接说明](https://learn.chatgpt.com/docs/reference/commands#deep-links) 提供了本地聊天路由依据。注册了 URL scheme 或系统接受了请求，都不证明打开了正确对话。泊岸不会把云端聊天 ID 改写为本地线程 ID，也不会自动回退到网页。URL 或原生 App 版本变化后需重新确认。
+Undo covers the latest 50 successful library changes during the current run, including edits and favorites. It clears when the app quits. Changes and ordering are saved immediately; text-field undo takes priority while editing. Preferences have separate storage and do not consume library undo history.
 
-## 设计与架构
+## Link support
 
-- [UI 研究与设计决策](docs/design-research.md)
-- [架构与数据保护](docs/ARCHITECTURE.md)
-- [后续改进计划](docs/ROADMAP.md)
+| Link | Behavior |
+| --- | --- |
+| `codex://threads/<local-thread UUID>` | Tests opening in the designated native app; the exact conversation must be confirmed by the user. |
+| Cloud URLs such as `https://chatgpt.com/c/…` | Saved for organization; native opening is currently unavailable. |
+| `chatgpt-conversation://…` references | Saved for organization; native opening is currently unavailable. |
+| Other URLs or nonstandard native links with extra parameters | Not executed; Harbor explains why. |
 
-`HarborCore` 负责模型、存储与链接规则；`HarborApp` 负责 SwiftUI、菜单栏、窗口、快捷键、设置及原生打开。读取损坏或未知版本资料时会停止写入，保留原文件。
+The [official deep-link reference](https://learn.chatgpt.com/docs/reference/commands#deep-links) documents the local-thread route. A registered URL handler or an accepted system request does not prove that the correct conversation opened. Harbor never converts a cloud conversation ID into a local thread ID and never silently falls back to a browser. A changed URL or native app version requires confirmation again.
 
-## 公开仓库与隐私
+## Design and architecture
 
-仓库只包含程序、虚构测试数据和公共文档。用户项目名称、聊天链接、验证记录、个人资料库和本地开发记录不包含在发布内容中。请勿在公开 issue 或截图中贴私人聊天链接。
+- [Architecture and storage](docs/ARCHITECTURE.md)
+- [Entry management and interaction design](docs/entry-management.md)
+- [UI research and decisions](docs/design-research.md)
+- [Roadmap](docs/ROADMAP.md)
+
+`HarborCore` owns models, storage, editing, undo, and link policy. `HarborApp` provides SwiftUI, the menu bar, the floating panel, keyboard handling, settings, and native opening. Unreadable or unsupported-version data is protected from overwrite.
+
+## Privacy
+
+Data stays in `~/Library/Application Support/HarborWorkspaceDock/`. This repository contains source, fictional test fixtures, and public documentation only. Personal libraries, conversation identifiers, confirmation records, and private development history are excluded. Please keep private chat links out of public issues and screenshots.

@@ -1,6 +1,6 @@
-# 构建与运行泊岸
+# Build and run Harbor
 
-需要 macOS 13+ 和支持 Swift 5.9 或更新版本的完整 Xcode。当前机器使用 `/Applications/Xcode.app`。脚本只给本次构建指定 Xcode，不修改系统设置。
+Harbor is a native macOS menu-bar launcher for project-organized chat links. It keeps the ChatGPT app as your chat client. Requires macOS 13+ and Xcode with Swift 5.9 or newer; no third-party packages are used.
 
 ```sh
 bash scripts/test.sh
@@ -8,25 +8,53 @@ bash scripts/build.sh
 open dist/Harbor.app
 ```
 
-也可以在 Xcode 中打开 `Package.swift`，选择 Harbor 可执行目标。Swift Package 是源工程入口；本地 `.app` 由构建脚本生成，无第三方包。
+The scripts use `/Applications/Xcode.app` for that command only. Override it with `HARBOR_DEVELOPER_DIR` if needed; they do not change the system-wide developer selection. Open `Package.swift` in Xcode to work on the executable and core library. The build script creates `dist/Harbor.app` with an ad-hoc signature and verifies it. It does not install, publish, or register a login item. This development build is not notarized.
 
-手动启动显示面板；以后点菜单栏四方格，或按 `⌃⌥Space` 呼出。按 `Esc` 收起，在菜单栏选「退出泊岸」结束运行。`⌘F` 聚焦搜索，`⌘N` 添加入口，`⌘,` 打开设置。
+## Everyday use
 
-先新建项目，再添加聊天名称及原始链接。只支持 `codex://threads/<UUID>` 的显式原生测试。选中入口并点击「验证」，观察原生 App 中是否进入正确对话，再用菜单或快捷键返回泊岸，选择「我已进入正确对话」。系统接收链接不会自动把它标为已确认。URL 或原生 App 版本改变后需要重新验证。每行的「更多操作」菜单提供收藏、编辑和复制链接。
+- Open Harbor manually to show the panel. Use the menu-bar icon or `⌃⌥Space` to bring it back; `Esc` hides it.
+- Search starts only when you click the search field or press `⌘F`. Opening the panel and choosing a project or entry do not automatically start a blinking text cursor. Selecting an entry leaves search editing while preserving your query.
+- Use `↑` / `↓` to select and `Return` to open, verify, or show details while the list or search field has focus. Tab-focused controls and input-method composition retain their own keyboard behavior.
+- `⌘N` adds an entry; `⌘,` opens Settings. Quit from the menu-bar menu.
 
-ChatGPT 云端 HTTPS 链接和 `chatgpt-conversation://` 引用可以保存，但原生打开暂不支持。不存在浏览器回退或聊天 ID 自动转换。
+Create a project, then add a name and the original chat link. Harbor stores metadata, not chat content. Do not rewrite a cloud conversation ID as a Codex link.
 
-数据位于 `~/Library/Application Support/HarborWorkspaceDock/workspace.json`，仅包含项目、入口信息和本机确认记录。读取失败时停止编辑，保留原文件。没有导入、删除或自动同步。
+Only the exact `codex://threads/<UUID>` route is a native candidate. Select **Verify**, inspect the exact conversation in the native ChatGPT / Codex app, return to Harbor, and confirm that it is correct. The system accepting a URL is not verification. Changes to the URL or native app version require another check.
 
-v0.2 的设置单独写入同目录的 `preferences.json`，不改 `workspace.json` 或它的版本。可选系统/浅色/深色、青绿/蓝色/石墨点缀、舒适/紧凑密度，以及下次启动时默认显示所有入口或收藏。「恢复默认外观」只改变外观、颜色和密度，不清除资料，也不更改登录项。
+ChatGPT cloud HTTPS links and `chatgpt-conversation://` references can be saved, but native navigation is not confirmed. Harbor does not silently open a browser or convert their identifiers.
 
-## 登录自动启动
+## Organize entries
 
-先把应用放到 `/Applications/Harbor.app` 或 `~/Applications/Harbor.app` 这样的稳定位置，再从设置打开「登录 Mac 时启动泊岸」。该开关读取系统真实状态：只有 `enabled` 是已启用；`requiresApproval` 会显示「等待系统允许」，并提供系统设置入口，不会误报成功。
+Sidebar items have full-row hit areas. Clicking an entry selects it; its action button opens or verifies it. The More menu provides favorite, edit, move, reorder, copy, and delete actions.
 
-登录自动启动使用 macOS 13+ 的 `SMAppService.mainApp`。登录启动时通过启动 Apple Event 识别为 login item，保持菜单栏待命；手动启动显示面板。实际注销再登录需要单独实测；单元测试只验证显示策略。
+Move an entry with **Move to…** or drag it onto a project in the sidebar. Harbor then selects that project and entry. IDs, favorites, and verification records are preserved. Dropping on the current project is a no-op.
 
-为安装后验收提供以下命令（不要从开发目录注册登录项）：
+Within a complete project group, drop above or below another entry to place it before or after that entry. **Move Up** and **Move Down** provide a keyboard-accessible alternative. Search and Favorites views disable reordering so hidden entries cannot be accidentally rearranged; cross-project moves remain available. Hovering only shows an insertion indicator. A completed drop commits once; a canceled drag changes nothing. Only Harbor's current in-process drag payload is accepted.
+
+Deleting an entry shows an Undo notice after saving. The same bounded history covers every successful workspace change, including edits and verification. Use the notice, the menu-bar menu, or `⌘Z`. Text editors receive their own undo first when they have text or text-undo history. The workspace history keeps at most 50 steps for the current run; quitting clears it. It is not a persistent recycle bin. Failed saves and failed undos leave both current data and history unchanged.
+
+## Local files and languages
+
+The default data directory is `~/Library/Application Support/HarborWorkspaceDock/`:
+
+- `workspace.json` stores projects, entries, array order, and native verification records. Its schema remains version 1.
+- `preferences.json` stores language, appearance, accent, density, and the startup view. It is independent of the workspace.
+
+New installations start in **English**. Valid preferences from earlier Chinese-only versions without a language field keep **Simplified Chinese**. An older workspace without preferences also keeps Chinese. The first selected default is saved before a new workspace is created, so a fresh English installation stays English after restarting.
+
+Choose **Settings → General → Language** to switch immediately. Names, URLs, and other user-provided content are never translated. Notices and undo action descriptions retain semantic templates and original arguments, allowing them to update with the chosen language. macOS-provided error details can follow the system language.
+
+Appearance options include System / Light / Dark, Teal / Blue / Graphite, and Comfortable / Compact rows. Choose All Entries or Favorites for the next launch. **Reset Appearance** changes only appearance, accent, and density, never entries, language, or login items. Unreadable or newer data is protected instead of being replaced by an empty library.
+
+English source text and its Chinese translations live in `HarborText.swift` and `HarborTranslations.swift`. Keep user text in arguments rather than translation keys. Localization tests cover legacy defaults, persistence, argument preservation, and translation placeholder parity.
+
+## Launch at login
+
+Install the app in a stable location such as `/Applications/Harbor.app` or `~/Applications/Harbor.app`, then enable **Launch Harbor at login** in Settings. The toggle reads the real `SMAppService.mainApp.status`; only `enabled` means it is active. A `requiresApproval` response is shown as **Waiting for System Approval** with a System Settings button.
+
+On a login-item launch, Harbor stays in the menu bar. Manual launches show the panel. The implementation reads the launch Apple Event in `applicationDidFinishLaunching`, using `keyAEPropData == keyAELaunchedAsLogInItem`. A real logout/login remains a separate manual acceptance check; unit tests verify the presentation policy.
+
+Installed-app diagnostics:
 
 ```sh
 /Applications/Harbor.app/Contents/MacOS/Harbor --login-item-status
@@ -34,20 +62,16 @@ v0.2 的设置单独写入同目录的 `preferences.json`，不改 `workspace.js
 /Applications/Harbor.app/Contents/MacOS/Harbor --disable-login-item
 ```
 
-这些命令输出 JSON 的真实系统状态，然后退出，不打开面板。启用命令只有读到 `enabled` 才返回 0；等待系统允许返回 2，失败返回 1。查询状态不更改注册。开发目录及隔离数据模式均禁止修改登录项；注册动作不由构建或测试脚本触发。
+These commands print JSON with the actual system status and exit without showing the panel. Enabling returns 0 only for `enabled`, 2 when approval is still required, and 1 on failure. Querying status is read-only. Development locations and isolated data mode cannot change login items. Build and test scripts never register a login item.
 
-参考：[Apple SMAppService](https://developer.apple.com/documentation/servicemanagement/smappservice)、[register](https://developer.apple.com/documentation/servicemanagement/smappservice/register())、[requiresApproval](https://developer.apple.com/documentation/servicemanagement/smappservice/status-swift.enum/requiresapproval)。本机 SDK 的 `AERegistry.h` 定义 `keyAELaunchedAsLogInItem` 作为登录启动标记；实现于 `applicationDidFinishLaunching` 读取启动事件。
+References: [Apple SMAppService](https://developer.apple.com/documentation/servicemanagement/smappservice), [register](https://developer.apple.com/documentation/servicemanagement/smappservice/register()), and [requiresApproval](https://developer.apple.com/documentation/servicemanagement/smappservice/status-swift.enum/requiresapproval). The SDK's `AERegistry.h` documents the login-launch marker.
 
-## 隔离验收
+## Isolated acceptance testing
 
-从终端传入独立目录：
+Run one instance at a time to avoid hotkey conflicts:
 
 ```sh
 open -n dist/Harbor.app --args --data-dir /tmp/harbor-acceptance
 ```
 
-或者直接运行 `HARBOR_DATA_DIR=/tmp/harbor-acceptance dist/Harbor.app/Contents/MacOS/Harbor`。测试时只运行一个实例，避免热键冲突。测试目录不会改变正式资料目录。
-
-`--hidden` 可测试只驻留菜单栏，`--show` 可强制显示面板；两个参数不会注册登录项。
-
-这是本机开发构建，仅有临时签名（ad-hoc），没有开发者公证。构建脚本不会自行安装、发布或注册登录项。快捷键注册失败会在面板提示，菜单栏仍可使用。
+Alternatively, run `HARBOR_DATA_DIR=/tmp/harbor-acceptance dist/Harbor.app/Contents/MacOS/Harbor`. This directory contains test preferences and data without changing the normal library. `--hidden` tests menu-bar-only presentation; `--show` forces the panel visible. Neither flag registers a login item.

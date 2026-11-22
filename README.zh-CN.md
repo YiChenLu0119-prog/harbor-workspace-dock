@@ -2,6 +2,8 @@
 
 [English](README.md) | 简体中文
 
+**正式仓库：**[YiChenLu0119-prog/harbor-workspace-dock](https://github.com/YiChenLu0119-prog/harbor-workspace-dock) · [反馈问题或建议](https://github.com/YiChenLu0119-prog/harbor-workspace-dock/issues)
+
 A lightweight native macOS launcher for organizing links to your ChatGPT work. Built with SwiftUI and AppKit. Your conversations stay in the native ChatGPT app.
 
 泊岸把分散的工作入口按项目收好。按 **⌃⌥Space**，搜索、选中，再回到原生 ChatGPT 继续工作。

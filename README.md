@@ -2,6 +2,8 @@
 
 English | [简体中文](README.zh-CN.md)
 
+**Official repository:** [YiChenLu0119-prog/harbor-workspace-dock](https://github.com/YiChenLu0119-prog/harbor-workspace-dock) · [Report a bug or suggest a feature](https://github.com/YiChenLu0119-prog/harbor-workspace-dock/issues)
+
 **A small home for your ChatGPT work on macOS.**
 
 Harbor keeps your conversation shortcuts together by project. Press **⌃⌥Space**, find an entry, and continue working in the native app. Built with SwiftUI and AppKit, with local storage and no third-party dependencies.

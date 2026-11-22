@@ -12,26 +12,16 @@ struct HarborApp: App {
         if let code = LoginItemController.runCommandIfRequested(arguments: ProcessInfo.processInfo.arguments) { exit(code) }
     }
     var body: some Scene {
-        MenuBarExtra("泊岸 Harbor", systemImage: "square.grid.2x2.fill") {
-            Button("显示泊岸  ⌃⌥Space") { delegate.controller?.show() }
-            Button("添加入口…") { delegate.controller?.show(); delegate.controller?.model.beginAddEntry() }
-            Button("设置…") { delegate.controller?.showSettings() }.keyboardShortcut(",")
-            Divider()
-            Button("显示本地资料位置") {
-                if let url = delegate.controller?.model.dataURL {
-                    NSWorkspace.shared.activateFileViewerSelecting([url.deletingLastPathComponent()])
-                }
-            }
-            Divider()
-            Button("退出泊岸") { NSApplication.shared.terminate(nil) }.keyboardShortcut("q")
+        MenuBarExtra("Harbor", systemImage: "square.grid.2x2.fill") {
+            if let controller = delegate.controller { HarborMenuContent(controller: controller, model: controller.model) }
         }
         .menuBarExtraStyle(.menu)
     }
 }
 
 @MainActor
-final class HarborDelegate: NSObject, NSApplicationDelegate {
-    var controller: PanelController?
+final class HarborDelegate: NSObject, NSApplicationDelegate, ObservableObject {
+    @Published var controller: PanelController?
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         controller = PanelController(directory: Self.dataDirectory())
@@ -63,6 +53,10 @@ private final class LauncherPanel: NSPanel {
     override var canBecomeMain: Bool { true }
 }
 
+private final class LauncherHostingView<Content: View>: NSHostingView<Content> {
+    override var acceptsFirstResponder: Bool { true }
+}
+
 @MainActor
 final class PanelController: NSObject, NSWindowDelegate {
     let model: LauncherModel
@@ -75,22 +69,26 @@ final class PanelController: NSObject, NSWindowDelegate {
         model = LauncherModel(directory: directory)
         panel = LauncherPanel(contentRect: NSRect(x: 0, y: 0, width: 720, height: 500), styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
         super.init()
-        panel.title = "泊岸 Harbor"
+        panel.title = "Harbor"
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.standardWindowButton(.closeButton)?.isHidden = true
         panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
         panel.standardWindowButton(.zoomButton)?.isHidden = true
-        panel.isMovableByWindowBackground = true
+        panel.isMovableByWindowBackground = false
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
-        panel.contentView = NSHostingView(rootView: LauncherView(model: model))
+        panel.contentView = LauncherHostingView(rootView: LauncherView(model: model))
         panel.delegate = self
         panel.center()
         model.closePanel = { [weak self] in self?.hide() }
         model.showPanel = { [weak self] in self?.show() }
+        model.endSearchEditing = { [weak self] in
+            guard let self else { return }
+            self.panel.makeFirstResponder(self.panel.contentView)
+        }
         preferenceSubscription = model.preferences.$value.sink { [weak self] value in
             switch value.appearance {
             case .system: self?.panel.appearance = nil
@@ -100,12 +98,21 @@ final class PanelController: NSObject, NSWindowDelegate {
         }
         hotkey = HotkeyManager { [weak self] in self?.toggle() }
         if let status = hotkey?.register(), status != noErr {
-            model.hotkeyWarning = "⌃⌥Space 未能注册（可能被占用）。仍可使用菜单栏打开泊岸。"
+            model.hotkeyUnavailable = true
         }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, event.window === self.panel, self.panel.attachedSheet == nil else { return event }
             // Leave input-method candidate navigation/commit untouched (Chinese, Japanese, etc.).
             if let editor = self.panel.firstResponder as? NSTextView, editor.hasMarkedText() { return event }
+            if event.keyCode == 48 { self.model.listNavigationActive = false; return event }
+            let modifiers = event.modifierFlags.intersection([.command, .control, .option, .shift])
+            if modifiers == .command, event.charactersIgnoringModifiers == "z" {
+                // Typed text gets its own undo first. An empty, untouched search field doesn't swallow workspace undo.
+                if let editor = self.panel.firstResponder as? NSTextView,
+                   !editor.string.isEmpty || (editor.undoManager?.canUndo ?? false) { return event }
+                self.model.undo()
+                return nil
+            }
             if event.modifierFlags.intersection(.deviceIndependentFlagsMask).contains(.command), event.charactersIgnoringModifiers == "n" {
                 self.model.beginAddEntry(); return nil
             }
@@ -117,8 +124,9 @@ final class PanelController: NSObject, NSWindowDelegate {
             }
             guard event.modifierFlags.intersection([.command, .control, .option]).isEmpty else { return event }
             if event.keyCode == 53 { self.hide(); return nil }
-            // Only the search field owns result navigation. Native buttons retain Return/arrow behavior.
-            guard self.panel.firstResponder is NSTextView else { return event }
+            // Search and explicit list focus own result navigation. Tab-focused controls retain their keys.
+            let listHasFocus = self.panel.firstResponder === self.panel.contentView && self.model.listNavigationActive
+            guard self.panel.firstResponder is NSTextView || listHasFocus else { return event }
             switch event.keyCode {
             case 125: self.model.moveSelection(1); return nil
             case 126: self.model.moveSelection(-1); return nil
@@ -131,7 +139,7 @@ final class PanelController: NSObject, NSWindowDelegate {
     func show() {
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
-        model.focusRequest += 1
+        model.stopSearching()
     }
     func hide() { panel.orderOut(nil) }
     func showSettings() {

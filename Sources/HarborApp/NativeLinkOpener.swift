@@ -12,9 +12,9 @@ enum NativeOpenError: LocalizedError {
     case notAccepted
     var errorDescription: String? {
         switch self {
-        case .unavailable: return "找不到支持 Codex 链接的原生 ChatGPT / Codex App。请先安装并打开该 App。"
-        case .unsupported: return "此入口尚无已确认的原生打开方式。链接已保存在本机，不会转到浏览器。"
-        case .notAccepted: return "原生 App 没有接收此链接，请稍后重试。"
+        case .unavailable: return "No native ChatGPT / Codex app supporting these links was found. Install and open the app first."
+        case .unsupported: return "This entry has no confirmed native opening method. It stays local and will not open in a browser."
+        case .notAccepted: return "The native app did not accept the link. Try again later."
         }
     }
 }

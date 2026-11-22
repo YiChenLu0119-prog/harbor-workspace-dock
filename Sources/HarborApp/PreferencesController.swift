@@ -5,16 +5,17 @@ import HarborCore
 @MainActor
 final class PreferencesController: ObservableObject {
     @Published private(set) var value = HarborPreferences()
-    @Published private(set) var errorMessage: String?
+    @Published private var issue: LocalizedNotice?
+    var errorMessage: String? { issue?.rendered(in: value.language) }
     @Published private(set) var readOnly = false
     private let repository: PreferencesRepository
 
     init(directory: URL) {
         repository = PreferencesRepository(directory: directory)
-        do { value = try repository.load() }
+        do { value = try repository.loadOrCreate() }
         catch {
             readOnly = true
-            errorMessage = "无法读取偏好，暂用默认外观；你的项目资料不受影响。\n\(error.localizedDescription)"
+            issue = .failure("Could not read preferences. Using the default appearance; your projects are unaffected.\n%@", error)
         }
     }
 
@@ -26,12 +27,16 @@ final class PreferencesController: ObservableObject {
         do {
             try repository.save(next)
             value = next
-            errorMessage = nil
+            issue = nil
             return true
         } catch {
-            errorMessage = "偏好未保存：\(error.localizedDescription)"
+            issue = .failure("Preferences were not saved: %@", error)
             return false
         }
+    }
+
+    func t(_ english: String, _ arguments: String...) -> String {
+        HarborLocalization.text(english, language: value.language, arguments: arguments)
     }
 
     var colorScheme: ColorScheme? {

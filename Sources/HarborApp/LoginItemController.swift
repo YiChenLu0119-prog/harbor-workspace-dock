@@ -5,7 +5,8 @@ import HarborCore
 @MainActor
 final class LoginItemController: ObservableObject {
     @Published private(set) var state: LoginItemState = .unknown
-    @Published private(set) var errorMessage: String?
+    @Published private var issue: LocalizedNotice?
+    func errorMessage(in language: HarborLanguage) -> String? { issue?.rendered(in: language) }
     let canManage: Bool
     let restriction: String?
 
@@ -16,7 +17,7 @@ final class LoginItemController: ObservableObject {
         let installed = Bundle.main.bundleURL.pathExtension == "app" && [systemApplications, userApplications].contains(directory)
         let isolated = arguments.contains("--data-dir") || environment["HARBOR_DATA_DIR"] != nil
         canManage = installed && !isolated
-        restriction = isolated ? "隔离验收模式不会修改系统登录项。" : (installed ? nil : "请先把泊岸放进「应用程序」文件夹，再设置登录启动。")
+        restriction = isolated ? "Isolated test mode does not change login items." : (installed ? nil : "Move Harbor to Applications before setting up launch at login.")
         refresh()
     }
 
@@ -31,8 +32,8 @@ final class LoginItemController: ObservableObject {
     }
 
     func setEnabled(_ enabled: Bool) {
-        guard canManage else { errorMessage = restriction; refresh(); return }
-        errorMessage = nil
+        guard canManage else { issue = restriction.map { .text(HarborText($0)) }; refresh(); return }
+        issue = nil
         do {
             if enabled {
                 // An existing approval request is not active, and re-registering won't approve it.
@@ -42,20 +43,22 @@ final class LoginItemController: ObservableObject {
             } else if SMAppService.mainApp.status != .notRegistered {
                 try SMAppService.mainApp.unregister()
             }
-        } catch { errorMessage = "系统未完成设置：\(error.localizedDescription)" }
+        } catch { issue = .failure("The system could not complete the change: %@", error) }
         refresh()
     }
 
     func openSystemSettings() { SMAppService.openSystemSettingsLoginItems() }
 
-    var statusText: String {
+    func statusText(in language: HarborLanguage) -> String {
+        let source: String
         switch state {
-        case .notRegistered: return "未开启"
-        case .enabled: return "已启用"
-        case .requiresApproval: return "等待系统允许"
-        case .notFound: return "系统未找到此应用"
-        case .unknown: return "状态未知"
+        case .notRegistered: source = "Off"
+        case .enabled: source = "Enabled"
+        case .requiresApproval: source = "Waiting for System Approval"
+        case .notFound: source = "Application Not Found"
+        case .unknown: source = "Unknown Status"
         }
+        return HarborLocalization.text(source, language: language)
     }
 
     /// Runs only for explicit command-line management and returns actual system status.
@@ -75,12 +78,12 @@ final class LoginItemController: ObservableObject {
             "enabled": controller.state.isEnabled,
             "canManage": controller.canManage,
             "applicationPath": Bundle.main.bundlePath,
-            "error": controller.errorMessage as Any? ?? NSNull(),
+            "error": controller.errorMessage(in: .english) as Any? ?? NSNull(),
             "restriction": controller.restriction as Any? ?? NSNull()
         ]
         if let data = try? JSONSerialization.data(withJSONObject: response, options: [.sortedKeys]), let string = String(data: data, encoding: .utf8) { print(string) }
         if flag == "--login-item-status" { return 0 }
-        if controller.errorMessage != nil { return 1 }
+        if controller.errorMessage(in: .english) != nil { return 1 }
         if flag == "--enable-login-item" { return controller.state.isEnabled ? 0 : (controller.state == .requiresApproval ? 2 : 1) }
         return controller.state == .notRegistered ? 0 : 1
     }

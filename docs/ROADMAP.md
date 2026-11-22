@@ -1,23 +1,25 @@
-# 改进计划
+# Roadmap
 
-## v0.2 · 日常启动与个性化
+## v0.3 — Entry management and languages
 
-登录时启动、系统真实状态反馈、设置入口、系统/浅/深外观、点缀色、标准/紧凑密度和默认视图。用更紧凑的项目列表、选中行主动作和清楚的搜索范围减少日常操作。
+Delete and undo, move between projects, drag to reorder, menu-based movement, full-row click targets, and persistent English / Simplified Chinese selection. Successful saves precede UI updates. Undo lasts for the current run. Native-link confirmation, workspace format, and login launch remain compatible.
 
-## 下一步 · 入口管理
+## Existing foundation
 
-- 删除与撤销、跨项目移动、手动排序。
-- 最近打开与固定入口；明确最近记录仅保存在本机。
-- 导入/导出与自动备份；导入时重新审查链接及本机验证记录。
-- 可修改全局快捷键，并处理与其他程序冲突。
+Menu bar, global shortcut, grouped search, favorites, editing, launch at login, appearance, accent colors, list density, and a preferred starting view.
 
-验收重点：误删可恢复、升级不丢数据、导入不信任外部验证标记。
+## Next: Data management
 
-## 后续 · 稳定与分发
+- Import, export, and automatic backups; re-evaluate links and device-local verification on import.
+- A trash that survives restarts, project renaming, and project ordering.
+- Recent and pinned entries, with local-only usage records.
+- Custom global shortcuts and conflict handling.
 
-- 多屏、Spaces、全屏、休眠恢复、VoiceOver 和输入法回归。
-- 单实例和并发写入保护，升级与回退机制。
-- Developer ID 签名、公证和可验证的安装包。
-- 只有获得官方路由依据和准确落点验证后，才增加云端聊天原生打开支持。
+## Later: Reliability and distribution
 
-这些是计划，不表示已经提供。没有服务器、账号系统或聊天内容同步计划。
+- More coverage for multiple displays, Spaces, full-screen apps, sleep/wake, and input methods.
+- Single-instance protection, concurrent-write safety, upgrades, and rollback.
+- Developer ID signing, notarization, and a verifiable installer.
+- Native opening of cloud chats only after an official route and exact-destination verification are available.
+
+These future items are plans, not shipped features. No server, account system, or conversation-content synchronization is planned.

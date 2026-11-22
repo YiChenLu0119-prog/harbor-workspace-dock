@@ -4,6 +4,10 @@ public enum HarborAppearance: String, Codable, CaseIterable { case system, light
 public enum HarborDensity: String, Codable, CaseIterable { case comfortable, compact }
 public enum HarborStartView: String, Codable, CaseIterable { case all, favorites }
 public enum HarborAccent: String, Codable, CaseIterable { case teal, blue, graphite }
+public enum HarborLanguage: String, Codable, CaseIterable, Sendable {
+    case english = "en"
+    case simplifiedChinese = "zh-Hans"
+}
 
 public struct HarborPreferences: Codable, Equatable {
     public static let currentSchemaVersion = 1
@@ -12,7 +16,20 @@ public struct HarborPreferences: Codable, Equatable {
     public var density: HarborDensity = .comfortable
     public var startView: HarborStartView = .all
     public var accent: HarborAccent = .teal
+    public var language: HarborLanguage = .english
     public init() {}
+
+    private enum CodingKeys: String, CodingKey { case schemaVersion, appearance, density, startView, accent, language }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try values.decode(Int.self, forKey: .schemaVersion)
+        appearance = try values.decode(HarborAppearance.self, forKey: .appearance)
+        density = try values.decode(HarborDensity.self, forKey: .density)
+        startView = try values.decode(HarborStartView.self, forKey: .startView)
+        accent = try values.decode(HarborAccent.self, forKey: .accent)
+        // v0.1/v0.2 were Chinese-only; an absent language preserves that experience.
+        language = try values.decodeIfPresent(HarborLanguage.self, forKey: .language) ?? .simplifiedChinese
+    }
 }
 
 public enum PreferencesError: LocalizedError {
@@ -21,9 +38,9 @@ public enum PreferencesError: LocalizedError {
     case notLoaded
     public var errorDescription: String? {
         switch self {
-        case .unsupportedVersion(let version): return "此偏好文件使用未支持的版本 \(version)，原文件已保留。"
-        case .protectedAfterReadFailure: return "偏好读取失败，已暂停保存以保护原文件。"
-        case .notLoaded: return "尚未读取偏好，无法保存。"
+        case .unsupportedVersion(let version): return "Preferences version \(version) is unsupported. The original file is preserved."
+        case .protectedAfterReadFailure: return "Saving is paused to protect unreadable preferences."
+        case .notLoaded: return "Load preferences before saving."
         }
     }
 }
@@ -35,13 +52,25 @@ public final class PreferencesRepository {
     private var readFailed = false
     public init(directory: URL) { fileURL = directory.appendingPathComponent("preferences.json") }
 
+    /// Persist the initial language before a newly created workspace could look like a legacy install.
+    public func loadOrCreate() throws -> HarborPreferences {
+        let preferences = try load()
+        if !FileManager.default.fileExists(atPath: fileURL.path) { try save(preferences) }
+        return preferences
+    }
+
     public func load() throws -> HarborPreferences {
         do {
             let data: Data
             do { data = try Data(contentsOf: fileURL) }
             catch let error as NSError where error.domain == NSCocoaErrorDomain && error.code == NSFileReadNoSuchFileError {
                 loaded = true; readFailed = false
-                return HarborPreferences()
+                var preferences = HarborPreferences()
+                // A pre-preferences installation may already have a workspace but no settings file.
+                if FileManager.default.fileExists(atPath: fileURL.deletingLastPathComponent().appendingPathComponent("workspace.json").path) {
+                    preferences.language = .simplifiedChinese
+                }
+                return preferences
             }
             let header = try JSONDecoder().decode(Header.self, from: data)
             guard header.schemaVersion == HarborPreferences.currentSchemaVersion else {

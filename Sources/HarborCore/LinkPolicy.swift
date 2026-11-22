@@ -8,10 +8,10 @@ public enum LinkKind: Equatable {
 
     public var sourceLabel: String {
         switch self {
-        case .localCodex: return "本地 Codex"
-        case .cloudChatGPT: return "ChatGPT 云端"
-        case .conversationReference: return "聊天引用"
-        case .unsupported: return "其他链接"
+        case .localCodex: return "Local Codex"
+        case .cloudChatGPT: return "ChatGPT Cloud"
+        case .conversationReference: return "Chat Reference"
+        case .unsupported: return "Other Link"
         }
     }
 }

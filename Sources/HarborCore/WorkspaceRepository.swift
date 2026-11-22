@@ -8,10 +8,10 @@ public enum RepositoryError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .unsupportedVersion(let version): return "资料版本 \(version) 高于此版本支持范围，原文件已保留。"
-        case .invalidLibrary: return "资料格式有误或包含重复编号，原文件已保留。"
-        case .notLoaded: return "尚未读取资料，无法保存。"
-        case .protectedAfterReadFailure: return "资料读取失败，已暂停保存以保护原文件。"
+        case .unsupportedVersion(let version): return "Data version \(version) is unsupported. The original file is preserved."
+        case .invalidLibrary: return "The library is invalid or contains duplicate IDs. The original file is preserved."
+        case .notLoaded: return "Load the library before saving."
+        case .protectedAfterReadFailure: return "Saving is paused to protect the unreadable library."
         }
     }
 }

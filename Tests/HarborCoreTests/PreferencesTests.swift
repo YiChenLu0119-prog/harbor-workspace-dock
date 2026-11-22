@@ -15,7 +15,9 @@ final class PreferencesRepositoryTests: XCTestCase {
         try original.write(to: workspaceURL)
         let repository = PreferencesRepository(directory: directory)
         var preferences = try repository.load()
-        XCTAssertEqual(preferences, HarborPreferences())
+        var legacyDefaults = HarborPreferences()
+        legacyDefaults.language = .simplifiedChinese
+        XCTAssertEqual(preferences, legacyDefaults)
         XCTAssertEqual(preferences.appearance, .system)
         preferences.appearance = .dark
         preferences.accent = .blue

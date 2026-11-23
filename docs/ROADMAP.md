@@ -1,5 +1,9 @@
 # Roadmap
 
+## v0.4 — Menu bar quick access
+
+A visible name or icon-only menu-bar label, compact favorites and project navigation, and quick access to the existing workspace commands. The full workspace and verified native-opening rules remain the foundation.
+
 ## v0.3 — Entry management and languages
 
 Delete and undo, move between projects, drag to reorder, menu-based movement, full-row click targets, and persistent English / Simplified Chinese selection. Successful saves precede UI updates. Undo lasts for the current run. Native-link confirmation, workspace format, and login launch remain compatible.

@@ -10,7 +10,8 @@ Harbor keeps your conversation shortcuts together by project. Press **⌃⌥Spac
 
 ## Features
 
-- **One shortcut away.** A menu-bar app and a global keyboard shortcut open a native floating panel.
+- **A place in your menu bar.** See Harbor by name and open a compact panel with favorite entries and project shortcuts. Switch to an icon-only label when space is tight.
+- **One shortcut away.** A global keyboard shortcut opens the complete native workspace.
 - **Organize your work.** Projects, search, favorites, editable entries, and full-row navigation targets.
 - **Move, sort, and undo.** Delete entries with undo, move them between projects, or drag to reorder within a project.
 - **Make it yours.** English and Simplified Chinese, system/light/dark appearance, accent colors, list density, and a preferred starting view.
@@ -37,6 +38,12 @@ Install `Harbor.app` in `/Applications` or `~/Applications` before enabling **La
 4. Use **⌘N** to add an entry, **⌘F** to focus search, and **⌘,** to open Settings.
 
 New installations start in English. Switch anytime in **Settings → Language**. Existing preferences from earlier versions retain Simplified Chinese. Your own project names and entry titles stay as written. Opening the panel or switching projects leaves the search field inactive; click it or press **⌘F** to start typing.
+
+## What's new in v0.4
+
+Click **Harbor** in the macOS menu bar for quick access to your first six favorites and your projects. Use **View All** to see every favorite, or **Open Workspace** to return to the full workspace with search, editing, drag sorting, and undo. Favorite rows use the same native-link verification rules as the workspace; entries needing attention return you to the full workspace.
+
+The compact panel also keeps Add Entry, Undo, Settings, the data folder, and Quit within reach. It has no search field to focus accidentally; use **⌃⌥Space** and **⌘F** for full search. Hide the name through **Settings → General → Show name in menu bar** to keep only the icon. macOS may hide menu-bar items when the bar is crowded; the global shortcut remains available.
 
 ## What's new in v0.3
 

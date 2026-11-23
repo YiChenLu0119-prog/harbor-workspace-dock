@@ -41,6 +41,11 @@ struct SettingsView: View {
             Text(preferences.t("Changes apply immediately. Project and entry names stay as you wrote them."))
                 .font(.caption).foregroundColor(.secondary)
             Divider()
+            Toggle(preferences.t("Show name in menu bar"), isOn: Binding(get: { preferences.value.showsMenuBarName }, set: { choice in preferences.update { $0.showsMenuBarName = choice } }))
+                .toggleStyle(.switch).disabled(preferences.readOnly)
+            Text(preferences.t("Keep Harbor visible beside its icon, or use the icon alone to save space."))
+                .font(.caption).foregroundColor(.secondary)
+            Divider()
             VStack(alignment: .leading, spacing: 9) {
                 Toggle(preferences.t("Launch Harbor at login"), isOn: Binding(get: { loginItem.state.isEnabled }, set: { loginItem.setEnabled($0) }))
                     .toggleStyle(.switch).disabled(!loginItem.canManage)

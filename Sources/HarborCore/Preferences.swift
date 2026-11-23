@@ -17,9 +17,10 @@ public struct HarborPreferences: Codable, Equatable {
     public var startView: HarborStartView = .all
     public var accent: HarborAccent = .teal
     public var language: HarborLanguage = .english
+    public var showsMenuBarName = true
     public init() {}
 
-    private enum CodingKeys: String, CodingKey { case schemaVersion, appearance, density, startView, accent, language }
+    private enum CodingKeys: String, CodingKey { case schemaVersion, appearance, density, startView, accent, language, showsMenuBarName }
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         schemaVersion = try values.decode(Int.self, forKey: .schemaVersion)
@@ -29,6 +30,7 @@ public struct HarborPreferences: Codable, Equatable {
         accent = try values.decode(HarborAccent.self, forKey: .accent)
         // v0.1/v0.2 were Chinese-only; an absent language preserves that experience.
         language = try values.decodeIfPresent(HarborLanguage.self, forKey: .language) ?? .simplifiedChinese
+        showsMenuBarName = try values.decodeIfPresent(Bool.self, forKey: .showsMenuBarName) ?? true
     }
 }
 

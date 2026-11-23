@@ -12,10 +12,16 @@ struct HarborApp: App {
         if let code = LoginItemController.runCommandIfRequested(arguments: ProcessInfo.processInfo.arguments) { exit(code) }
     }
     var body: some Scene {
-        MenuBarExtra("Harbor", systemImage: "square.grid.2x2.fill") {
+        MenuBarExtra {
             if let controller = delegate.controller { HarborMenuContent(controller: controller, model: controller.model) }
+        } label: {
+            if let controller = delegate.controller {
+                HarborMenuBarLabel(preferences: controller.model.preferences)
+            } else {
+                Image(systemName: "square.grid.2x2.fill")
+            }
         }
-        .menuBarExtraStyle(.menu)
+        .menuBarExtraStyle(.window)
     }
 }
 
@@ -64,6 +70,7 @@ final class PanelController: NSObject, NSWindowDelegate {
     private var hotkey: HotkeyManager?
     private var keyMonitor: Any?
     private var preferenceSubscription: AnyCancellable?
+    private weak var menuBarWindow: NSWindow?
 
     init(directory: URL) {
         model = LauncherModel(directory: directory)
@@ -137,13 +144,67 @@ final class PanelController: NSObject, NSWindowDelegate {
     }
 
     func show() {
+        dismissMenuBar()
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
         model.stopSearching()
     }
-    func hide() { panel.orderOut(nil) }
+    func hide() { dismissMenuBar(); panel.orderOut(nil) }
+    func attachMenuBarWindow(_ window: NSWindow?) {
+        guard window !== panel else { return }
+        menuBarWindow = window
+        window?.title = model.t("Harbor Quick Access")
+    }
+    func dismissMenuBar() { menuBarWindow?.orderOut(nil) }
+    private var hasActiveEditor: Bool { model.showEntryEditor || model.showProjectEditor || model.showSettings }
+    func showProject(_ id: UUID) {
+        guard model.workspace.projects.contains(where: { $0.id == id }) else { return }
+        guard !hasActiveEditor else { show(); return }
+        model.query = ""
+        model.favoritesOnly = false
+        model.selectedProjectID = id
+        show()
+    }
+    func showFavorites() {
+        guard !hasActiveEditor else { show(); return }
+        model.query = ""
+        model.selectedProjectID = nil
+        model.favoritesOnly = true
+        show()
+    }
+    func showQuickEntry(_ id: UUID) {
+        guard !model.isOpening, !model.isReceivingDrop,
+              let entry = model.entry(id), let project = model.project(containing: id) else { return }
+        let activeEditor = hasActiveEditor
+        let route = MenuBarQuickAccess.route(for: entry, application: model.currentApplication?.identity,
+                                            hasPendingConfirmation: model.pending != nil, hasActiveEditor: activeEditor)
+        dismissMenuBar()
+        if route == .verifiedNative {
+            model.activate(entry)
+            return
+        }
+        if !activeEditor {
+            model.query = ""
+            model.favoritesOnly = false
+            model.selectedProjectID = project.id
+            model.selectEntry(id)
+        }
+        show()
+        // Unsupported links explain their limit in the workspace. Unverified native links
+        // wait for the existing Verify action; a pending confirmation is never replaced.
+        if !activeEditor, model.pending == nil,
+           LinkPolicy.nativeCandidateURL(entry.url) == nil || model.currentApplication == nil {
+            model.activate(entry)
+        }
+    }
+    func showAddEntry() {
+        let activeEditor = hasActiveEditor
+        show()
+        if !activeEditor { model.beginAddEntry() }
+    }
     func showSettings() {
         show()
+        guard !model.showEntryEditor && !model.showProjectEditor else { return }
         model.loginItem.refresh()
         model.showSettings = true
     }

@@ -2,7 +2,9 @@
 
 ```mermaid
 flowchart LR
-  Menu[Menu bar / global shortcut] --> Panel[AppKit NSPanel]
+  Menu[Menu bar quick access] --> State[Application state]
+  Menu --> Panel[AppKit NSPanel]
+  Hotkey[Global shortcut] --> Panel
   Panel --> UI[SwiftUI projects and entries]
   UI --> State[Application state]
   State --> Core[HarborCore]
@@ -18,6 +20,12 @@ flowchart LR
 `HarborCore` is a Foundation-only library for projects, entries, verification records, editing, undo, format versions, and storage. Tests use temporary directories and fictional links.
 
 `HarborApp` owns the menu bar, floating window, global shortcut, forms, preferences, localization, and native opening. Link policy stays separate from presentation so a future supported cloud route does not require redesigning the project list.
+
+## Menu bar quick access
+
+The compact menu-bar panel and the full workspace share the same application model, preferences, library and undo history. The panel projects favorites in stored order and provides project navigation. It never creates another library or verification path. Confirmed native entries can open directly; entries requiring attention return to the workspace. The menu-bar window closes before workspace actions, while the complete workspace keeps its established keyboard behavior.
+
+The visible name is optional and stored separately from workspace data. Missing name-visibility preferences upgrade to showing the localized name. The compact panel has no search field, so opening it cannot implicitly enter search mode.
 
 ## Opening a link
 
@@ -46,7 +54,7 @@ An own-process data type carries per-session and per-drag identifiers. Hovering 
 
 ## Preferences and language
 
-`preferences.json` is separate from the library. Appearance, accent, density, starting view, and language persist only after a successful save. New preferences default to English; earlier preferences without a language field decode as Simplified Chinese. Switching languages updates interface text while preserving user content. Preferences do not enter library undo history.
+`preferences.json` is separate from the library. Appearance, accent, density, starting view, language, and menu-bar name visibility persist only after a successful save. New preferences default to English; earlier preferences without a language field decode as Simplified Chinese. Switching languages updates interface text while preserving user content. Preferences do not enter library undo history.
 
 Corrupt, future-version, or unwritable preference files retain the same protective behavior as the library.
 

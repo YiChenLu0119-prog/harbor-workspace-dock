@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- Visible Harbor name beside the menu-bar icon, with a persistent icon-only option.
+- A compact native quick-access panel with up to six favorites, a complete favorites shortcut, and project navigation.
+- Full-row targets, bounded scrolling, and bilingual empty-state guidance.
+- Existing workspace, global shortcut, editing, undo, settings, local storage, and login launch retained.
+- Quick access shares the existing native-link safety and confirmation rules.
+
 ## 0.3.0
 
 ### Added

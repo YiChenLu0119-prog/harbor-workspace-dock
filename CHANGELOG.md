@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.1
+
+- Fixed an application exit when macOS hides or removes the menu-bar item.
+- AppKit owns application lifetime and retains the status item, popover, and workspace independently.
+- Manual launch and reopen show the workspace; login and hidden launches keep their existing presentation policy.
+- Added a teal harbor application icon and reproducible ICNS packaging to the build.
+- Preserved local libraries, preferences, native-link confirmation rules, editing commands, and login registration.
+
 ## 0.4.0
 
 - Visible Harbor name beside the menu-bar icon, with a persistent icon-only option.

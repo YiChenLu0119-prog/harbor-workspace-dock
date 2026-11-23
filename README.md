@@ -1,5 +1,7 @@
 # Harbor · Workspace Dock
 
+<img src="Resources/AppIcon.png" width="112" alt="Harbor application icon">
+
 English | [简体中文](README.zh-CN.md)
 
 **Official repository:** [YiChenLu0119-prog/harbor-workspace-dock](https://github.com/YiChenLu0119-prog/harbor-workspace-dock) · [Report a bug or suggest a feature](https://github.com/YiChenLu0119-prog/harbor-workspace-dock/issues)
@@ -38,6 +40,12 @@ Install `Harbor.app` in `/Applications` or `~/Applications` before enabling **La
 4. Use **⌘N** to add an entry, **⌘F** to focus search, and **⌘,** to open Settings.
 
 New installations start in English. Switch anytime in **Settings → Language**. Existing preferences from earlier versions retain Simplified Chinese. Your own project names and entry titles stay as written. Opening the panel or switching projects leaves the search field inactive; click it or press **⌘F** to start typing.
+
+## What's new in v0.4.1
+
+Harbor now stays running when its menu-bar item is hidden or removed. Normal launch and reopening show the workspace; login launch remains quiet. This fixes an exit in v0.4 that could make Harbor appear unable to open. A new teal harbor icon is included in the app bundle.
+
+If **⌃⌥Space** is already used to switch input sources, change that assignment in **System Settings → Keyboard → Keyboard Shortcuts → Input Sources**. Harbor does not modify system shortcuts automatically.
 
 ## What's new in v0.4
 

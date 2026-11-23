@@ -22,7 +22,7 @@ Empty favorites explain how to add favorites. An empty library offers the existi
 
 ## Platform evidence
 
-Apple documents `MenuBarExtra` as a way to reach frequent functions while an app is inactive. Its `systemImage` initializer uses the supplied title as an accessibility label; a custom label is needed for visible name text. Its window style supports richer content and standard controls on macOS 13+. [MenuBarExtra](https://developer.apple.com/documentation/swiftui/menubarextra)
+The original v0.4 implementation used SwiftUI `MenuBarExtra`. Apple documents that an app with only this scene quits when the item is removed. On-device testing reproduced that exit, so v0.4.1 moves application lifetime to AppKit and retains an `NSStatusItem` and `NSPopover`, while keeping the SwiftUI content. The item allows removal but does not enable `terminationOnRemoval`. [MenuBarExtra](https://developer.apple.com/documentation/swiftui/menubarextra), [terminationOnRemoval](https://developer.apple.com/documentation/appkit/nsstatusitem/behavior-swift.struct/terminationonremoval)
 
 Apple's menu-bar guidance favors symbols and simple menus, while allowing richer presentation when needed. macOS may hide extras when space is tight. Harbor therefore keeps the name optional and preserves its independent hotkey. [The menu bar](https://developer.apple.com/design/human-interface-guidelines/the-menu-bar)
 
@@ -34,7 +34,7 @@ Source review completed on 2026-11-23. The implementation uses a 360 pt panel wi
 
 | Requirement | Source review result |
 | --- | --- |
-| Visible name and icon-only preference | Custom menu-bar label observes persisted preferences; missing fields default to showing the name |
+| Visible name and icon-only preference | Status-item label observes persisted preferences; missing fields default to showing the name |
 | Favorite ordering and overflow | Six favorites in workspace order, including parent labels and a View all action |
 | Row click areas and long text | Expanded button labels include rectangular hit areas; full names remain in accessibility labels/help |
 | Existing commands and full workspace | Workspace, Add Entry, Undo, Settings, data folder, and Quit remain reachable |
@@ -46,3 +46,9 @@ Source review completed on 2026-11-23. The implementation uses a 360 pt panel wi
 Review corrections were applied before acceptance: protect project/Favorites navigation beneath an active sheet, disable menu Undo during a sheet, clarify Verify…, display unreadable-library status instead of zero counts, and include Settings padding within its clickable label. A missing native app also leads to the existing workspace explanation.
 
 No unresolved source-level design blocker was identified in this review. This does not establish native behavior: on-device acceptance is still pending for English and Chinese; name/icon changes and relaunch; full-width clicks; zero, six, and more than six favorites; long titles; many projects; protected data; pending confirmation; popup dismissal; and all existing workspace commands. Use fictional data for screenshots.
+
+## v0.4.1 lifecycle follow-up
+
+The delegate retains the workspace and quick-access controller independently of status-item visibility. Explicit launch and reopen present the workspace and request visibility for Harbor's own item. Login and `--hidden` launches respect the saved visibility. System-level menu-bar restrictions still take precedence. Closing the quick-access popover uses its public close action.
+
+Installed-app checks on macOS 26.6.2 confirmed normal launch, Quit followed by a second launch, and continued process lifetime while Harbor was switched off in System Settings → Menu Bar. The system switch was restored afterward. Physical menu-bar visibility, the popup's visual layout, and global shortcut delivery still need separate on-device confirmation; the automation's app-raising behavior does not establish those results.

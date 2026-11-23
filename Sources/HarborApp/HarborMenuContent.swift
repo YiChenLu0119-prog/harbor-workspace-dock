@@ -2,19 +2,6 @@ import SwiftUI
 import AppKit
 import HarborCore
 
-struct HarborMenuBarLabel: View {
-    @ObservedObject var preferences: PreferencesController
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "square.grid.2x2.fill").renderingMode(.template)
-            if preferences.value.showsMenuBarName { Text(preferences.t("Harbor")) }
-        }
-        .accessibilityLabel(preferences.t("Harbor Quick Access"))
-        .help(preferences.t("Harbor Quick Access"))
-    }
-}
-
 struct HarborMenuContent: View {
     let controller: PanelController
     @ObservedObject var model: LauncherModel
@@ -51,10 +38,6 @@ struct HarborMenuContent: View {
         .background(.regularMaterial)
         .tint(model.preferences.tint)
         .preferredColorScheme(model.preferences.colorScheme)
-        .background {
-            MenuBarWindowReader(onWindow: controller.attachMenuBarWindow)
-                .frame(width: 0, height: 0)
-        }
     }
 
     private var header: some View {

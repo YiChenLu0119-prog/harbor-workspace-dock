@@ -1,5 +1,7 @@
 # 泊岸 Harbor · Workspace Dock
 
+<img src="Resources/AppIcon.png" width="112" alt="Harbor application icon">
+
 [English](README.md) | 简体中文
 
 **正式仓库：**[YiChenLu0119-prog/harbor-workspace-dock](https://github.com/YiChenLu0119-prog/harbor-workspace-dock) · [反馈问题或建议](https://github.com/YiChenLu0119-prog/harbor-workspace-dock/issues)
@@ -37,6 +39,12 @@ open dist/Harbor.app
 2. 可测试的入口选择「验证入口」，观察是否进入正确对话，再回到泊岸确认。
 3. 日常用 **⌃⌥Space** 呼出；点搜索框或按 **⌘F** 后输入关键词，按 **↑/↓** 选择、**Return** 操作。
 4. 用 **⌘N** 添加入口、**⌘F** 回到搜索、**⌘,** 打开设置。
+
+## v0.4.1 启动修复与应用图标
+
+修复菜单栏入口被隐藏或移除时整个应用退出的问题。手动启动和重新打开都会显示工作台，登录启动继续保持安静。应用加入新的蓝绿色港湾图标。
+
+如果 **⌃⌥Space** 已被输入法切换占用，可在「系统设置 → 键盘 → 键盘快捷键 → 输入法」调整对应快捷键。泊岸不会自动修改系统快捷键。
 
 ## v0.4 顶部快捷面板
 

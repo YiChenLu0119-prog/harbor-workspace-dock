@@ -21,6 +21,12 @@ flowchart LR
 
 `HarborApp` owns the menu bar, floating window, global shortcut, forms, preferences, localization, and native opening. Link policy stays separate from presentation so a future supported cloud route does not require redesigning the project list.
 
+## Application lifetime
+
+An AppKit entry point runs `NSApplication` with a retained delegate. The delegate owns `PanelController` and `MenuBarController`; the latter retains an `NSStatusItem` and transient `NSPopover` hosting SwiftUI. Status-item behavior allows removal but excludes `terminationOnRemoval`, so hiding an item cannot terminate the launcher or unregister its global hotkey. Closing the last window also leaves the app running. Explicit Quit ends the process.
+
+Manual launch and reopen show the workspace and request visibility for Harbor's item. Login and `--hidden` launch follow the existing quiet presentation policy. System-level menu-bar restrictions are not overridden. The application supplies standard App/Edit menus for Quit, Settings, and text editing.
+
 ## Menu bar quick access
 
 The compact menu-bar panel and the full workspace share the same application model, preferences, library and undo history. The panel projects favorites in stored order and provides project navigation. It never creates another library or verification path. Confirmed native entries can open directly; entries requiring attention return to the workspace. The menu-bar window closes before workspace actions, while the complete workspace keeps its established keyboard behavior.
@@ -66,4 +72,4 @@ Corrupt, future-version, or unwritable preference files retain the same protecti
 
 Open `Package.swift` in Xcode, or build with the included shell scripts. The build produces a standard `.app` with an ad-hoc signature; it does not install, register login launch, publish, or notarize the app.
 
-Future import/export must validate schemas and re-evaluate imported verification records. Additional link routes require a documented policy and exact-destination confirmation. Shortcut customization can be added independently of the always-available menu-bar entry.
+Future import/export must validate schemas and re-evaluate imported verification records. Additional link routes require a documented policy and exact-destination confirmation. Shortcut customization can be added independently of menu-bar visibility.

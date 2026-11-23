@@ -6,39 +6,80 @@ import HarborCore
 import Darwin
 
 @main
-struct HarborApp: App {
-    @NSApplicationDelegateAdaptor(HarborDelegate.self) private var delegate
-    init() {
+enum HarborApp {
+    @MainActor
+    static func main() {
         if let code = LoginItemController.runCommandIfRequested(arguments: ProcessInfo.processInfo.arguments) { exit(code) }
-    }
-    var body: some Scene {
-        MenuBarExtra {
-            if let controller = delegate.controller { HarborMenuContent(controller: controller, model: controller.model) }
-        } label: {
-            if let controller = delegate.controller {
-                HarborMenuBarLabel(preferences: controller.model.preferences)
-            } else {
-                Image(systemName: "square.grid.2x2.fill")
-            }
-        }
-        .menuBarExtraStyle(.window)
+        let application = NSApplication.shared
+        let delegate = HarborDelegate()
+        application.delegate = delegate
+        withExtendedLifetime(delegate) { application.run() }
     }
 }
 
 @MainActor
-final class HarborDelegate: NSObject, NSApplicationDelegate, ObservableObject {
-    @Published var controller: PanelController?
+final class HarborDelegate: NSObject, NSApplicationDelegate {
+    private var controller: PanelController?
+    private var menuBar: MenuBarController?
+    private var menuSubscription: AnyCancellable?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        controller = PanelController(directory: Self.dataDirectory())
+        let controller = PanelController(directory: Self.dataDirectory())
+        self.controller = controller
+        menuBar = MenuBarController(controller: controller)
+        menuSubscription = controller.model.preferences.$value.sink { [weak self] value in
+            self?.installMainMenu(language: value.language)
+        }
         let event = NSAppleEventManager.shared().currentAppleEvent
         let loginLaunch = event?.eventID == kAEOpenApplication && event?.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue == keyAELaunchedAsLogInItem
-        if LaunchPresentation.shouldShowPanel(isLoginItem: loginLaunch, arguments: ProcessInfo.processInfo.arguments) { controller?.show() }
+        if LaunchPresentation.shouldShowPanel(isLoginItem: loginLaunch, arguments: ProcessInfo.processInfo.arguments) {
+            menuBar?.revealForManualOpen()
+            controller.show()
+        }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        menuBar?.revealForManualOpen()
         controller?.show()
         return false
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    @objc private func showWorkspace(_ sender: Any?) { controller?.show() }
+    @objc private func showSettings(_ sender: Any?) { controller?.showSettings() }
+
+    private func installMainMenu(language: HarborLanguage) {
+        func t(_ text: String) -> String { HarborLocalization.text(text, language: language) }
+        let menu = NSMenu()
+        let appItem = NSMenuItem()
+        let appMenu = NSMenu(title: t("Harbor"))
+        let open = NSMenuItem(title: t("Open Workspace"), action: #selector(showWorkspace(_:)), keyEquivalent: "")
+        open.target = self
+        appMenu.addItem(open)
+        let settings = NSMenuItem(title: t("Settings…"), action: #selector(showSettings(_:)), keyEquivalent: ",")
+        settings.target = self
+        appMenu.addItem(settings)
+        appMenu.addItem(.separator())
+        appMenu.addItem(withTitle: t("Quit Harbor"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appItem.submenu = appMenu
+        menu.addItem(appItem)
+
+        // AppKit owns the application lifecycle; keep text-field keyboard commands in the responder chain.
+        let editItem = NSMenuItem()
+        let editMenu = NSMenu(title: t("Edit"))
+        editMenu.addItem(withTitle: t("Undo"), action: Selector(("undo:")), keyEquivalent: "z")
+        let redo = editMenu.addItem(withTitle: t("Redo"), action: Selector(("redo:")), keyEquivalent: "z")
+        redo.keyEquivalentModifierMask = [.command, .shift]
+        editMenu.addItem(.separator())
+        editMenu.addItem(withTitle: t("Cut"), action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: t("Copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: t("Paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: t("Select All"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editItem.submenu = editMenu
+        menu.addItem(editItem)
+        NSApp.mainMenu = menu
     }
 
     private static func dataDirectory() -> URL {
@@ -70,7 +111,7 @@ final class PanelController: NSObject, NSWindowDelegate {
     private var hotkey: HotkeyManager?
     private var keyMonitor: Any?
     private var preferenceSubscription: AnyCancellable?
-    private weak var menuBarWindow: NSWindow?
+    var dismissQuickAccess: (() -> Void)?
 
     init(directory: URL) {
         model = LauncherModel(directory: directory)
@@ -150,12 +191,7 @@ final class PanelController: NSObject, NSWindowDelegate {
         model.stopSearching()
     }
     func hide() { dismissMenuBar(); panel.orderOut(nil) }
-    func attachMenuBarWindow(_ window: NSWindow?) {
-        guard window !== panel else { return }
-        menuBarWindow = window
-        window?.title = model.t("Harbor Quick Access")
-    }
-    func dismissMenuBar() { menuBarWindow?.orderOut(nil) }
+    func dismissMenuBar() { dismissQuickAccess?() }
     private var hasActiveEditor: Bool { model.showEntryEditor || model.showProjectEditor || model.showSettings }
     func showProject(_ id: UUID) {
         guard model.workspace.projects.contains(where: { $0.id == id }) else { return }

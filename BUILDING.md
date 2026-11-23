@@ -8,7 +8,7 @@ bash scripts/build.sh
 open dist/Harbor.app
 ```
 
-The scripts use `/Applications/Xcode.app` for that command only. Override it with `HARBOR_DEVELOPER_DIR` if needed; they do not change the system-wide developer selection. Open `Package.swift` in Xcode to work on the executable and core library. The build script creates `dist/Harbor.app` with an ad-hoc signature and verifies it. It does not install, publish, or register a login item. This development build is not notarized.
+The scripts use `/Applications/Xcode.app` for that command only. Override it with `HARBOR_DEVELOPER_DIR` if needed; they do not change the system-wide developer selection. Open `Package.swift` in Xcode to work on the executable and core library. The build script creates `dist/Harbor.app` with an ad-hoc signature and verifies it. It packages `Resources/AppIcon.png` into an ICNS with all standard macOS icon sizes using `sips` and `iconutil`. It does not install, publish, or register a login item. This development build is not notarized.
 
 ## Everyday use
 
@@ -16,6 +16,10 @@ The scripts use `/Applications/Xcode.app` for that command only. Override it wit
 - Search starts only when you click the search field or press `⌘F`. Opening the panel and choosing a project or entry do not automatically start a blinking text cursor. Selecting an entry leaves search editing while preserving your query.
 - Use `↑` / `↓` to select and `Return` to open, verify, or show details while the list or search field has focus. Tab-focused controls and input-method composition retain their own keyboard behavior.
 - `⌘N` adds an entry; `⌘,` opens Settings. Quit from the menu-bar menu.
+
+Harbor v0.4.1 stays running when its menu-bar item is removed or hidden. Launch Harbor again from Applications or Spotlight to show the workspace. macOS can still suppress its item when menu-bar space is limited or the app is disabled in System Settings → Menu Bar.
+
+If `⌃⌥Space` is assigned to **Select next source in Input menu**, disable or change that assignment in System Settings → Keyboard → Keyboard Shortcuts → Input Sources. Other input shortcuts can remain enabled. Harbor never changes system input-source shortcuts automatically.
 
 Create a project, then add a name and the original chat link. Harbor stores metadata, not chat content. Do not rewrite a cloud conversation ID as a Codex link.
 
